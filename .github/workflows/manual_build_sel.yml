@@ -1,0 +1,64 @@
+name: Manual & Auto Build
+
+on:
+  push:
+    branches:
+      - "2"
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to build from'
+        required: true
+        default: '2'
+        type: string
+      environment:
+        description: 'Select environment to build'
+        required: true
+        default: 'esp32-s3-st7735'
+        type: choice
+        options:
+          - "esp32-s3-st7735"
+          - "esp32-s3-devkitc-1"
+          - "m5stack-cardputer"
+          - "m5stack-cplus2"
+          - "Marauder-Mini"
+
+jobs:
+  compile_selected:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.target_branch || github.ref_name }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install requests esptool intelhex platformio
+
+      - name: Run Compile
+        run: |
+          if [ -d "bruce-firmware" ]; then
+            cd bruce-firmware
+          fi
+          ENV_NAME="${{ github.event.inputs.environment }}"
+          if [ -z "$ENV_NAME" ]; then
+            ENV_NAME="esp32-s3-st7735"
+          fi
+          platformio run -e "$ENV_NAME"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bruce-Firmware-Bin
+          path: |
+            .pio/build/**/*.bin
+            bruce-firmware/.pio/build/**/*.bin
+          if-no-files-found: error
