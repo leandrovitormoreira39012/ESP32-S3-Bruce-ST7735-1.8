@@ -28,7 +28,7 @@ jobs:
           pip install platformio
 
       - name: Compilar Firmware
-        run: pio run -d bruce-firmware
+        run: pio run -e esp32-s3-st7735
 
       - name: Salvar Binarios
         uses: actions/upload-artifact@v4
