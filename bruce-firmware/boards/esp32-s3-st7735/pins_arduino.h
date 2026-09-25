@@ -1,6 +1,3 @@
-//   Developed by ViniciusHNF
-//   GitHub Repository: https://github.com/viniciushnf/ESP32-S3-Bruce-ST7735-1.8
-
 #ifndef Pins_Arduino_h
 #define Pins_Arduino_h
 
@@ -13,17 +10,16 @@
 #define SPI_MISO_PIN 41
 #define SPI_SCK_PIN 5
 
-#define USE_HSPI_PORT
-
+#define USE_FSPI_PORT
 #define HAS_5_BUTTONS
 
-// Display ST7735
-// #define USER_SETUP_LOADED // Já foi definido
-// #define ST7735_DRIVER // Já foi definido
-// #define TFT_WIDTH 128
-// #define TFT_HEIGHT 160
-// #define ST7735_BLACKTAB
-// #define TFT_RGB_ORDER TFT_BGR // Colour order Blue-Green-Red
+// Display ST7735 Configuration
+#define USER_SETUP_LOADED 1
+#define ST7735_DRIVER 1
+#define TFT_WIDTH 128
+#define TFT_HEIGHT 160
+#define ST7735_GREENTAB3
+#define TFT_RGB_ORDER TFT_BGR
 #define TFT_BACKLIGHT_ON HIGH
 #define TFT_BL 4
 #define TFT_CS 16
@@ -33,10 +29,6 @@
 #define TFT_SCLK 5
 #define TFT_MISO 41
 
-// #define SPI_FREQUENCY 40000000 // Original
-// #define SPI_FREQUENCY 10000000
-// #define SPI_READ_FREQUENCY 16000000
-
 #define ROTATION 1
 #define MINBRIGHT 1
 
@@ -44,41 +36,37 @@
 #define USB_PID 0x1001
 
 #define PIN_RGB_LED 48
-// BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_RGB_LED;
-#define BUILTIN_LED LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN // allow testing #ifdef LED_BUILTIN
-// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite()
+#define BUILTIN_LED LED_BUILTIN
+#define LED_BUILTIN LED_BUILTIN
+#define RGB_BUILTIN AND_RGB_BRIGHTNESS
 #define RGB_BUILTIN LED_BUILTIN
 #define RGB_BRIGHTNESS 64
 
-// =============================================
 // RGB LED (WS2812 NeoPixel)
-// =============================================
-// #define HAS_RGB_LED 1
-// #define RGB_LED 48
-// #define LED_TYPE WS2812B
-// #define LED_ORDER GRB
-// #define LED_TYPE_IS_RGBW 0
-// #define LED_COUNT 1
+#define HAS_RGB_LED 1
+#define RGB_LED_PIN 48
+#define LED_TYPE WS2812B
+#define LED_ORDER GRB
+#define LED_TYPE_IS_RGBW 0
+#define LED_COUNT 1
 
-// =============================================
 // GPS
-// =============================================
-// RX -> 38
-// TX -> 17
+#define RX 44
+#define TX 43
 
-static const uint8_t TX = 43;
-static const uint8_t RX = 44;
+static const uint8_t TX_PIN = 43;
+static const uint8_t RX_PIN = 44;
 
 static const uint8_t SDA = 18;
 static const uint8_t SCL = 8;
 
-static const uint8_t SS = 11; // Just so it's not empty.
+static const uint8_t SS = 11;
 static const uint8_t MOSI = 6;
 static const uint8_t MISO = 41;
 static const uint8_t SCK = 5;
 
+// Mapeamento dos Canais Analógicos (ADC)
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
 static const uint8_t A2 = 3;
@@ -100,6 +88,7 @@ static const uint8_t A17 = 18;
 static const uint8_t A18 = 19;
 static const uint8_t A19 = 20;
 
+// Mapeamento dos Pinos de Toque
 static const uint8_t T1 = 1;
 static const uint8_t T2 = 2;
 static const uint8_t T3 = 3;
@@ -115,4 +104,4 @@ static const uint8_t T12 = 12;
 static const uint8_t T13 = 13;
 static const uint8_t T14 = 14;
 
-#endif /* Pins_Arduino_h */
+#endif // Pins_Arduino_h
