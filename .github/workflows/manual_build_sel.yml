@@ -1,38 +1,21 @@
-name: Manual & Auto Build
+name: Build Automatico Branch 2
 
 on:
   push:
     branches:
       - "2"
+      - "main"
   workflow_dispatch:
-    inputs:
-      target_branch:
-        description: 'Branch to build from'
-        required: true
-        default: '2'
-        type: string
-      environment:
-        description: 'Select environment to build'
-        required: true
-        default: 'esp32-s3-st7735'
-        type: choice
-        options:
-          - "esp32-s3-st7735"
-          - "esp32-s3-devkitc-1"
-          - "m5stack-cardputer"
-          - "m5stack-cplus2"
-          - "Marauder-Mini"
 
 jobs:
-  compile_selected:
-    name: Build
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.target_branch || github.ref_name }}
+          submodules: recursive
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -48,17 +31,14 @@ jobs:
           if [ -d "bruce-firmware" ]; then
             cd bruce-firmware
           fi
-          ENV_NAME="${{ github.event.inputs.environment }}"
-          if [ -z "$ENV_NAME" ]; then
-            ENV_NAME="esp32-s3-st7735"
-          fi
-          platformio run -e "$ENV_NAME"
+          echo "Iniciando compilação..."
+          platformio run -e esp32-s3-st7735 || platformio run -e esp32-s3-devkitc-1 || platformio run
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Bruce-Firmware-Bin
+          name: Firmware-BIN-Branch2
           path: |
             .pio/build/**/*.bin
-            bruce-firmware/.pio/build/**/*.bin
+            **/firmware.bin
           if-no-files-found: error
