@@ -1,42 +1,56 @@
-
-#include "../src/modules/others/battery_information.h"
-#include "core/powersave.h"
-#include "core/utils.h"
 #include <Arduino.h>
+
+#if __has_include("core/powersave.h")
+  #include "core/powersave.h"
+#elif __has_include("../../include/core/powersave.h")
+  #include "../../include/core/powersave.h"
+#endif
+
+#if __has_include("core/utils.h")
+  #include "core/utils.h"
+#elif __has_include("../../include/core/utils.h")
+  #include "../../include/core/utils.h"
+#endif
+
+#if __has_include("modules/others/battery_information.h")
+  #include "modules/others/battery_information.h"
+#elif __has_include("../../src/modules/others/battery_information.h")
+  #include "../../src/modules/others/battery_information.h"
+#endif
 
 // =========================================================================
 // CONFIGURAÇÕES E TEMPOS
 // =========================================================================
-const unsigned long readDelay = 30;          // Tempo entre leituras (ms)
-const unsigned long firstRepeatDelay = 400;  // Delay inicial para repetição contínua
-const unsigned long repeatDelay = 200;       // Intervalo de repetição
-const unsigned long debounceDelay = 50;      // Debounce dos botões
+const unsigned long readDelay = 30;          
+const unsigned long firstRepeatDelay = 400;  
+const unsigned long repeatDelay = 200;       
+const unsigned long debounceDelay = 50;      
 
 // =========================================================================
-// MAPEAMENTO DOS 5 BOTÕES DIGITAIS (AJUSTE OS GPIOS SEUS AQUI)
+// MAPEAMENTO DOS 5 BOTÕES DIGITAIS (AJUSTE OS GPIOS SE PRECISAR)
 // =========================================================================
 #ifndef UP_BTN
-#define UP_BTN 11    // GPIO do botão CIMA
+#define UP_BTN 11    
 #endif
 
 #ifndef DOWN_BTN
-#define DOWN_BTN 12  // GPIO do botão BAIXO
+#define DOWN_BTN 12  
 #endif
 
 #ifndef LEFT_BTN
-#define LEFT_BTN 13  // GPIO do botão ESQUERDA
+#define LEFT_BTN 13  
 #endif
 
 #ifndef RIGHT_BTN
-#define RIGHT_BTN 10 // GPIO do botão DIREITA
+#define RIGHT_BTN 10 
 #endif
 
 #ifndef SEL_BTN
-#define SEL_BTN 14   // GPIO do botão OK / SELECT
+#define SEL_BTN 14   
 #endif
 
 #ifndef TFT_BL
-#define TFT_BL 4     // Pino de iluminação da tela (Backlight)
+#define TFT_BL 4     
 #endif
 
 // =========================================================================
@@ -57,7 +71,6 @@ unsigned long lastReadTime = 0;
 unsigned long lastMoveTime = 0;
 bool firstRepeat = true;
 
-// Controle de debounce do botão Select
 bool lastButtonReading = HIGH;
 bool stableButtonState = HIGH;
 unsigned long lastDebounceTime = 0;
@@ -79,13 +92,8 @@ void _setup_gpio() {
     bruceConfigPins.rotation = 1;
 }
 
-void _post_setup_gpio() {
-    // Reservado
-}
+void _post_setup_gpio() {}
 
-// =========================================================================
-// FUNÇÕES AUXILIARES
-// =========================================================================
 int getBattery() {
     return Battery_Information::getBatteryPercentage();
 }
@@ -106,9 +114,6 @@ JoyDirection readJoystickDirection() {
     return JOY_NONE;
 }
 
-// =========================================================================
-// GERAÇÃO DE EVENTOS
-// =========================================================================
 void triggerDirectionEvent(JoyDirection dir) {
     switch (dir) {
         case JOY_UP:    upPress_flag = true; break;
@@ -133,15 +138,11 @@ void joystickMap() {
     }
 }
 
-// =========================================================================
-// LOOP PRINCIPAL DE ENTRADA
-// =========================================================================
 void inputHandler(void) {
     unsigned long now = millis();
     if (now - lastReadTime < readDelay) return;
     lastReadTime = now;
 
-    // Leitura dos botões direcionais
     JoyDirection newDirection = readJoystickDirection();
     if (newDirection != currentDirection) {
         currentDirection = newDirection;
@@ -159,7 +160,6 @@ void inputHandler(void) {
         }
     }
 
-    // Leitura com debounce do botão Select / OK
     bool reading = digitalRead(SEL_BTN);
     if (reading != lastButtonReading) {
         lastDebounceTime = now;
@@ -174,13 +174,11 @@ void inputHandler(void) {
     }
     lastButtonReading = reading;
 
-    // Envio de Eventos para o Sistema
     if (upPress_flag || downPress_flag || leftPress_flag || rightPress_flag || slPress_flag) {
         AnyKeyPress = true;
         joystickMap();
         SelPress = slPress_flag;
 
-        // Limpa as flags
         upPress_flag = false;
         downPress_flag = false;
         leftPress_flag = false;
