@@ -27,7 +27,7 @@ const unsigned long repeatDelay = 200;
 const unsigned long debounceDelay = 50;      
 
 // =========================================================================
-// MAPEAMENTO DOS 5 BOTÕES DIGITAIS (AJUSTE OS GPIOS SE PRECISAR)
+// MAPEAMENTO DOS PINOS DO JOYSTICK
 // =========================================================================
 #ifndef UP_BTN
 #define UP_BTN 11    
@@ -62,9 +62,6 @@ volatile bool leftPress_flag = false;
 volatile bool rightPress_flag = false;
 volatile bool slPress_flag = false;
 
-// =========================================================================
-// ENUMERAÇÃO DE DIREÇÃO
-// =========================================================================
 enum JoyDirection { JOY_NONE, JOY_LEFT, JOY_RIGHT, JOY_UP, JOY_DOWN };
 JoyDirection currentDirection = JOY_NONE;
 unsigned long lastReadTime = 0;
@@ -76,7 +73,7 @@ bool stableButtonState = HIGH;
 unsigned long lastDebounceTime = 0;
 
 // =========================================================================
-// INICIALIZAÇÃO DE GPIOS
+// INICIALIZAÇÃO DE GPIOS E ROTAÇÃO 180°
 // =========================================================================
 void _setup_gpio() {
     pinMode(UP_BTN, INPUT_PULLUP);
@@ -85,11 +82,12 @@ void _setup_gpio() {
     pinMode(RIGHT_BTN, INPUT_PULLUP);
     pinMode(SEL_BTN, INPUT_PULLUP);
 
+    // Força o pino de luz de fundo no máximo absoluto
     pinMode(TFT_BL, OUTPUT);
     digitalWrite(TFT_BL, HIGH);
 
     bruceConfig.colorInverted = 0;
-    bruceConfigPins.rotation = 1;
+    bruceConfigPins.rotation = 3; // Rotação 180° (para SD card virado para cima)
 }
 
 void _post_setup_gpio() {}
@@ -99,17 +97,19 @@ int getBattery() {
 }
 
 void _setBrightness(uint8_t brightval) {
-    analogWrite(TFT_BL, brightval);
+    pinMode(TFT_BL, OUTPUT);
+    digitalWrite(TFT_BL, HIGH);
 }
 
 // =========================================================================
-// LEITURA DIGITAL DOS BOTÕES DE DIREÇÃO
+// LEITURA DO JOYSTICK COM EIXOS INVERTIDOS (CORRESPONDENDO À TELA 180°)
 // =========================================================================
 JoyDirection readJoystickDirection() {
-    if (digitalRead(UP_BTN) == LOW)    return JOY_UP;
-    if (digitalRead(DOWN_BTN) == LOW)  return JOY_DOWN;
-    if (digitalRead(LEFT_BTN) == LOW)  return JOY_LEFT;
-    if (digitalRead(RIGHT_BTN) == LOW) return JOY_RIGHT;
+    // Invertidos para acompanhar a tela virada de ponta-cabeça:
+    if (digitalRead(UP_BTN) == LOW)    return JOY_DOWN;  // Cima vira Baixo
+    if (digitalRead(DOWN_BTN) == LOW)  return JOY_UP;    // Baixo vira Cima
+    if (digitalRead(LEFT_BTN) == LOW)  return JOY_RIGHT; // Esquerda vira Direita
+    if (digitalRead(RIGHT_BTN) == LOW) return JOY_LEFT;  // Direita vira Esquerda
 
     return JOY_NONE;
 }
