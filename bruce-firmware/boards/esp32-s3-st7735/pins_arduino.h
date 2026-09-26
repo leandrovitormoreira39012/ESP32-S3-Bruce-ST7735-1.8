@@ -1,107 +1,91 @@
 #ifndef Pins_Arduino_h
 #define Pins_Arduino_h
 
+#include "sdkconfig.h"
 #include "soc/soc_caps.h"
 #include <stdint.h>
 
-// SPI Display
-#define SPI_SS_PIN 11
-#define SPI_MOSI_PIN 6
-#define SPI_MISO_PIN 41
+#define USB_VID 0x303A
+#define USB_PID 0x1001
+
+// --- Definições Globais do ESP32-S3 ---
+#define SDA 18
+#define SCL 8
+#define SCK 5
+#define MISO 41
+#define MOSI 6
+#define SS 16
+
+// --- Módulo GPS NEO-6M ---
+#define SERIAL_TX 43
+#define SERIAL_RX 44
+#define GPS_SERIAL_TX SERIAL_TX
+#define GPS_SERIAL_RX SERIAL_RX
+
+// --- Botão de Boot Secundário ---
+#define HAS_BTN 1
+#define BTN_ALIAS '"Mid"'
+#define BTN_PIN 0
+#define BTN_ACT LOW
+
+#define TXLED 48
+#define LED_ON HIGH
+#define LED_OFF LOW
+
+// --- Barramento SPI Principal (Compartilhado) ---
 #define SPI_SCK_PIN 5
+#define SPI_MISO_PIN 41
+#define SPI_MOSI_PIN 6
+#define SPI_SS_PIN 16
 
-#define USE_FSPI_PORT
-#define HAS_5_BUTTONS
+// --- Módulo CC1101 (Sub-GHz) ---
+#define CC1101_GDO0_PIN 18
+#define CC1101_SS_PIN 8
+#define CC1101_MOSI_PIN SPI_MOSI_PIN
+#define CC1101_SCK_PIN SPI_SCK_PIN
+#define CC1101_MISO_PIN SPI_MISO_PIN
 
-// Display ST7735 Configuration
+// --- Módulo NRF24L01+PA+LNA (2.4GHz) ---
+#define NRF24_CE_PIN 18
+#define NRF24_CS_PIN 8
+#define NRF24_MOSI_PIN SPI_MOSI_PIN
+#define NRF24_SCK_PIN SPI_SCK_PIN
+#define NRF24_MISO_PIN SPI_MISO_PIN
+
+// --- Módulos IR (Infravermelho) ---
+#define HAS_IR 1
+#define IR_TX_PIN 1
+#define IR_RX_PIN 2
+
+// --- Módulo PN532 (NFC / RFID via I2C) ---
+#define HAS_PN532 1
+#define PN532_SDA 18
+#define PN532_SCL 8
+
+// --- Configurações da Tela ST7735 1.8" ---
+#define HAS_SCREEN 1
+#define ROTATION 3
+#define TFT_BRIGHT 255
+
 #define USER_SETUP_LOADED 1
 #define ST7735_DRIVER 1
 #define TFT_WIDTH 128
 #define TFT_HEIGHT 160
 #define ST7735_GREENTAB3
-#define TFT_RGB_ORDER TFT_BGR
-#define TFT_BACKLIGHT_ON HIGH
-#define TFT_BL 4
+#define TFT_MISO 41
+#define TFT_MOSI 6
+#define TFT_SCLK 5
 #define TFT_CS 16
 #define TFT_DC 7
 #define TFT_RST 15
-#define TFT_MOSI 6
-#define TFT_SCLK 5
-#define TFT_MISO 41
+#define TFT_BL 4
+#define TFT_BACKLIGHT_ON HIGH
+#define SMOOTH_FONT 1
 
-#define ROTATION 1
-#define MINBRIGHT 1
-
-#define USB_VID 0x303a
-#define USB_PID 0x1001
-
-#define PIN_RGB_LED 48
-static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_RGB_LED;
-#define BUILTIN_LED LED_BUILTIN
-#define LED_BUILTIN LED_BUILTIN
-#define RGB_BUILTIN AND_RGB_BRIGHTNESS
-#define RGB_BUILTIN LED_BUILTIN
-#define RGB_BRIGHTNESS 64
-
-// RGB LED (WS2812 NeoPixel)
-#define HAS_RGB_LED 1
-#define RGB_LED_PIN 48
-#define LED_TYPE WS2812B
-#define LED_ORDER GRB
-#define LED_TYPE_IS_RGBW 0
-#define LED_COUNT 1
-
-// GPS
-#define RX 44
-#define TX 43
-
-static const uint8_t TX_PIN = 43;
-static const uint8_t RX_PIN = 44;
-
-static const uint8_t SDA = 18;
-static const uint8_t SCL = 8;
-
-static const uint8_t SS = 11;
-static const uint8_t MOSI = 6;
-static const uint8_t MISO = 41;
-static const uint8_t SCK = 5;
-
-// Mapeamento dos Canais Analógicos (ADC)
-static const uint8_t A0 = 1;
-static const uint8_t A1 = 2;
-static const uint8_t A2 = 3;
-static const uint8_t A3 = 4;
-static const uint8_t A4 = 5;
-static const uint8_t A5 = 6;
-static const uint8_t A6 = 7;
-static const uint8_t A7 = 8;
-static const uint8_t A8 = 9;
-static const uint8_t A9 = 10;
-static const uint8_t A10 = 11;
-static const uint8_t A11 = 12;
-static const uint8_t A12 = 13;
-static const uint8_t A13 = 14;
-static const uint8_t A14 = 15;
-static const uint8_t A15 = 16;
-static const uint8_t A16 = 17;
-static const uint8_t A17 = 18;
-static const uint8_t A18 = 19;
-static const uint8_t A19 = 20;
-
-// Mapeamento dos Pinos de Toque
-static const uint8_t T1 = 1;
-static const uint8_t T2 = 2;
-static const uint8_t T3 = 3;
-static const uint8_t T4 = 4;
-static const uint8_t T5 = 5;
-static const uint8_t T6 = 6;
-static const uint8_t T7 = 7;
-static const uint8_t T8 = 8;
-static const uint8_t T9 = 9;
-static const uint8_t T10 = 10;
-static const uint8_t T11 = 11;
-static const uint8_t T12 = 12;
-static const uint8_t T13 = 13;
-static const uint8_t T14 = 14;
+// --- Cartão Micro SD ---
+#define SDCARD_CS 40
+#define SDCARD_SCK 5
+#define SDCARD_MISO 41
+#define SDCARD_MOSI 6
 
 #endif // Pins_Arduino_h
