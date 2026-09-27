@@ -41,6 +41,11 @@ jobs:
       - name: Compilar Firmware
         run: pio run -d bruce-firmware
 
+      - name: Localizar arquivos BIN gerados
+        run: |
+          echo "=== ARQUIVOS BIN ENCONTRADOS ==="
+          find . -name "*.bin"
+
       - name: Salvar Binarios
         uses: actions/upload-artifact@v4
         with:
