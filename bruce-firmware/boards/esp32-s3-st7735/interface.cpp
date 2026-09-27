@@ -77,36 +77,10 @@ bool stableButtonState = HIGH;
 unsigned long lastDebounceTime = 0;
 
 // =========================================================================
-// FUNÇÕES DE INTERFACE
+// LEITURA E MAPEAMENTO INTERNO (C++)
 // =========================================================================
-void _setup_gpio() {
-    pinMode(UP_BTN, INPUT_PULLUP);
-    pinMode(DOWN_BTN, INPUT_PULLUP);
-    pinMode(LEFT_BTN, INPUT_PULLUP);
-    pinMode(RIGHT_BTN, INPUT_PULLUP);
-    pinMode(SEL_BTN, INPUT_PULLUP);
-
-    // Força o pino de luz de fundo no máximo
-    pinMode(TFT_BL, OUTPUT);
-    digitalWrite(TFT_BL, HIGH);
-
-    bruceConfig.colorInverted = 0;
-    bruceConfigPins.rotation = 3; // Rotação 180°
-}
-
-void _post_setup_gpio() {}
-
-int getBattery() {
-    return 100;
-}
-
-void _setBrightness(uint8_t brightval) {
-    pinMode(TFT_BL, OUTPUT);
-    digitalWrite(TFT_BL, HIGH);
-}
-
 JoyDirection readJoystickDirection() {
-    // Invertidos para alinhar com a tela de ponta-cabeça:
+    // Invertidos para alinhar com a tela de ponta-cabeça (180°):
     if (digitalRead(UP_BTN) == LOW)    return JOY_DOWN;  // Cima vira Baixo
     if (digitalRead(DOWN_BTN) == LOW)  return JOY_UP;    // Baixo vira Cima
     if (digitalRead(LEFT_BTN) == LOW)  return JOY_RIGHT; // Esquerda vira Direita
@@ -139,7 +113,36 @@ void joystickMap() {
     }
 }
 
-void inputHandler(void) {
+// =========================================================================
+// API DE INTERFACE EXTERNA (EXPORTADA EM C)
+// =========================================================================
+extern "C" void _setup_gpio() {
+    pinMode(UP_BTN, INPUT_PULLUP);
+    pinMode(DOWN_BTN, INPUT_PULLUP);
+    pinMode(LEFT_BTN, INPUT_PULLUP);
+    pinMode(RIGHT_BTN, INPUT_PULLUP);
+    pinMode(SEL_BTN, INPUT_PULLUP);
+
+    // Força o pino de luz de fundo no máximo
+    pinMode(TFT_BL, OUTPUT);
+    digitalWrite(TFT_BL, HIGH);
+
+    bruceConfig.colorInverted = 0;
+    bruceConfigPins.rotation = 3; // Rotação 180°
+}
+
+extern "C" void _post_setup_gpio() {}
+
+extern "C" int getBattery() {
+    return 100;
+}
+
+extern "C" void _setBrightness(uint8_t brightval) {
+    pinMode(TFT_BL, OUTPUT);
+    digitalWrite(TFT_BL, HIGH);
+}
+
+extern "C" void inputHandler(void) {
     unsigned long now = millis();
     if (now - lastReadTime < readDelay) return;
     lastReadTime = now;
@@ -188,5 +191,5 @@ void inputHandler(void) {
     }
 }
 
-void powerOff() {}
-void checkReboot() {}
+extern "C" void powerOff() {}
+extern "C" void checkReboot() {}
