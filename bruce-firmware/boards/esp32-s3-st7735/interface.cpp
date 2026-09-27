@@ -1,227 +1,191 @@
-//   Developed by ViniciusHNF
-//   GitHub Repository: https://github.com/viniciushnf/ESP32-S3-Bruce-ST7735-1.8
+//   Developed by ViniciusHNF & Leandro Vitor
+//   Custom Build for ESP32-S3 (ST7789 2.8" + Touch XPT2046 + SD + JY050)
 
-#include "../src/modules/others/battery_information.h"
-#include "core/powerSave.h"
-#include "core/utils.h"
 #include <Arduino.h>
 
-// ======================================================
-//          SETTINGS
-// ======================================================
-const int center = 2048;                    // Center of the joystick (ADC 12 bits = 0-4095)
-const int deadzone = 400;                   // Dead zone
-const unsigned long readDelay = 20;         // Time between readings
-const unsigned long firstRepeatDelay = 400; // initial joystick wait
-const unsigned long repeatDelay = 200;      // Continuous repetition of the joystick
-const unsigned long debounceDelay = 50;     // Debounce button
+// Inclusões com fallback de diretórios para o Bruce
+#if __has_include("core/powerSave.h")
+  #include "core/powerSave.h"
+#elif __has_include("../../include/core/powerSave.h")
+  #include "../../include/core/powerSave.h"
+#endif
+
+#if __has_include("core/utils.h")
+  #include "core/utils.h"
+#elif __has_include("../../include/core/utils.h")
+  #include "../../include/core/utils.h"
+#endif
+
+#if __has_include("modules/others/battery_information.h")
+  #include "modules/others/battery_information.h"
+#elif __has_include("../../src/modules/others/battery_information.h")
+  #include "../../src/modules/others/battery_information.h"
+#endif
 
 // ======================================================
-//          PINS
+//          CONFIGURAÇÕES DE TEMPO E DEBOUNCE
 // ======================================================
+const unsigned long readDelay = 30;         // Intervalo de leitura
+const unsigned long debounceDelay = 50;     // Tempo de debounce dos botões
+
+// ======================================================
+//          PINAGEM DO MÓDULO JY050 E DISPLAY
+// ======================================================
+#ifndef UP_BTN
+#define UP_BTN 4
+#endif
+#ifndef DOWN_BTN
+#define DOWN_BTN 5
+#endif
+#ifndef LEFT_BTN
+#define LEFT_BTN 6
+#endif
+#ifndef RIGHT_BTN
+#define RIGHT_BTN 7
+#endif
 #ifndef SEL_BTN
-#define SEL_BTN 14
+#define SEL_BTN 1
 #endif
-#ifndef JOY_X
-#define JOY_X 12
+#ifndef BTN_SET
+#define BTN_SET 2
 #endif
-#ifndef JOY_Y
-#define JOY_Y 13
+#ifndef BTN_RST
+#define BTN_RST 42
 #endif
+
 #ifndef TFT_BL
-#define TFT_BL 4
+#define TFT_BL 21
 #endif
 
 // ======================================================
-//          FLAGS
+//          FLAGS DE EVENTOS
 // ======================================================
 volatile bool upPress_flag = false;
 volatile bool downPress_flag = false;
 volatile bool leftPress_flag = false;
 volatile bool rightPress_flag = false;
 volatile bool slPress_flag = false;
+volatile bool setPress_flag = false;
+volatile bool rstPress_flag = false;
 
-// ======================================================
-//          JOYSTICK CONTROLLER
-// ======================================================
-enum JoyDirection { JOY_NONE, JOY_LEFT, JOY_RIGHT, JOY_UP, JOY_DOWN };
-JoyDirection currentDirection = JOY_NONE;
+// Controle de leitura
 unsigned long lastReadTime = 0;
-unsigned long lastMoveTime = 0;
-bool firstRepeat = true;
 
-// ======================================================
-// BUTTON CONTROL
-// ======================================================
-bool lastButtonReading = HIGH;
-bool stableButtonState = HIGH;
-unsigned long lastDebounceTime = 0;
+// Estado dos botões para debounce
+bool lastUpState = HIGH, stableUpState = HIGH, upDebounce = 0;
+bool lastDownState = HIGH, stableDownState = HIGH, downDebounce = 0;
+bool lastLeftState = HIGH, stableLeftState = HIGH, leftDebounce = 0;
+bool lastRightState = HIGH, stableRightState = HIGH, rightDebounce = 0;
+bool lastSelState = HIGH, stableSelState = HIGH, selDebounce = 0;
 
 // ======================================================
 // SETUP GPIO
 // ======================================================
 void _setup_gpio() {
-    pinMode(SEL_BTN, INPUT_PULLUP); // button
-    pinMode(JOY_X, INPUT);          // Analog X
-    pinMode(JOY_Y, INPUT);          // Analog Y
+    // Configura os botões digitais do JY050 como PULLUP
+    pinMode(UP_BTN, INPUT_PULLUP);
+    pinMode(DOWN_BTN, INPUT_PULLUP);
+    pinMode(LEFT_BTN, INPUT_PULLUP);
+    pinMode(RIGHT_BTN, INPUT_PULLUP);
+    pinMode(SEL_BTN, INPUT_PULLUP);
+    pinMode(BTN_SET, INPUT_PULLUP);
+    pinMode(BTN_RST, INPUT_PULLUP);
 
-    analogReadResolution(12);
-
-    analogSetAttenuation(ADC_11db); // Improves ADC stability.
-
-    pinMode(TFT_BL, OUTPUT);    // Backlight OUTPUT
-    digitalWrite(TFT_BL, HIGH); // Backlight HIGHT
+    // CORREÇÃO DO BRILHO: Força nível digital ALTO total no backlight
+    pinMode(TFT_BL, OUTPUT);
+    digitalWrite(TFT_BL, HIGH);
 
     bruceConfig.colorInverted = 0;
     bruceConfigPins.rotation = 1;
 }
 
 void _post_setup_gpio() {
-    // nothing
+    // Nada a executar pós-setup
 }
 
 // ======================================================
-//          BATTERY
+//          BATERIA
 // ======================================================
-int getBattery() { return Battery_information::getBatteryPercentage(); }
-
-// ======================================================
-//          SCREEN BRIGHTNESS
-// ======================================================
-void _setBrightness(uint8_t brightval) { analogWrite(TFT_BL, brightval); }
-
-// ======================================================
-//          ADC Smoothed Reading
-// ======================================================
-int smoothAnalogRead(uint8_t pin) {
-    long total = 0;
-    for (int i = 0; i < 4; i++) { total += analogRead(pin); }
-    return total / 4;
+int getBattery() { 
+    return Battery_information::getBatteryPercentage(); 
 }
 
 // ======================================================
-//          Joystick Direction Detection
+//          BRILHO DA TELA (CORRIGIDO PARA ST7789)
 // ======================================================
-JoyDirection readJoystickDirection() {
-    int x = smoothAnalogRead(JOY_X);
-    int y = smoothAnalogRead(JOY_Y);
-
-    if (x < center - deadzone) { return JOY_RIGHT; } // X-axis
-    if (x > center + deadzone) { return JOY_LEFT; }  // X-axis
-
-    if (y < center - deadzone) { return JOY_DOWN; } // Y-axis
-    if (y > center + deadzone) { return JOY_UP; }   // Y-axis
-    return JOY_NONE;
-}
-
-// ======================================================
-//          GENERATE EVENT
-// ======================================================
-void triggerDirectionEvent(JoyDirection dir) {
-    switch (dir) {
-        case JOY_UP: upPress_flag = true; break;
-        case JOY_DOWN: downPress_flag = true; break;
-        case JOY_LEFT: leftPress_flag = true; break;
-        case JOY_RIGHT: rightPress_flag = true; break;
-        default: break;
+void _setBrightness(uint8_t brightval) { 
+    pinMode(TFT_BL, OUTPUT);
+    // Para garantir 100% de brilho constante e sem piscar em PWM
+    if (brightval > 0) {
+        digitalWrite(TFT_BL, HIGH);
+    } else {
+        digitalWrite(TFT_BL, LOW);
     }
 }
 
+// ======================================================
+//          MAPEAMENTO DE AÇÕES DOS BOTÕES
+// ======================================================
 void joystickMap() {
     if (menuOptionLabel == "Main Menu") {
-        // EscPress = downPress_flag; // Down
-        PrevPress = leftPress_flag;  // Left
-        NextPress = rightPress_flag; // Right
-
-        // if (upPress_flag) {
-        //     OpenQuickAccess = true;
-        // } else {
-        //     OpenQuickAccess = false;
-        // }
+        PrevPress = leftPress_flag;   // Esquerda
+        NextPress = rightPress_flag;  // Direita
+        EscPress = rstPress_flag;     // Botão RST funciona como voltar/ESC
     } else {
-        PrevPress = upPress_flag;    // Up
-        NextPress = downPress_flag;  // Down
-        EscPress = leftPress_flag;   // Left
-        DownPress = rightPress_flag; // Right
+        PrevPress = upPress_flag;     // Cima
+        NextPress = downPress_flag;   // Baixo
+        EscPress = leftPress_flag;    // Esquerda vira ESC
+        DownPress = rightPress_flag;  // Direita vira Avançar
         OpenQuickAccess = false;
     }
-
-    // Serial.print("menuOptionType: '");
-    // Serial.print(menuOptionType); // Returns the menu index. Ex: Main Menu is 0, WiFi is 1, WiFi Atks is 2.
-    // Serial.print("' - menuOptionLabel: '");
-    // Serial.print(menuOptionLabel); // Returns the menu type. Ex: Main Menu, WiFi, BLE.
-    // Serial.println("'");
 }
 
 // ======================================================
-//          INPUT HANDLER
+//          INPUT HANDLER (LEITURA DIGITAL JY050)
 // ======================================================
 void InputHandler(void) {
     unsigned long now = millis();
-    if (now - lastReadTime < readDelay) { return; } // Limits reading rate
+    if (now - lastReadTime < readDelay) { return; }
     lastReadTime = now;
 
-    // ==================================================
-    // JOYSTICK
-    // ==================================================
-    JoyDirection newDirection = readJoystickDirection();
-    if (newDirection != currentDirection) {
-        currentDirection = newDirection;
-        lastMoveTime = now; // Reset timers
-        firstRepeat = true;
-        if (newDirection != JOY_NONE) { triggerDirectionEvent(newDirection); }
-    }
+    // Leitura Digital dos Botões do JY050 (Ativos em nível LOW)
+    bool currentUp = digitalRead(UP_BTN);
+    bool currentDown = digitalRead(DOWN_BTN);
+    bool currentLeft = digitalRead(LEFT_BTN);
+    bool currentRight = digitalRead(RIGHT_BTN);
+    bool currentSel = digitalRead(SEL_BTN);
+    bool currentSet = digitalRead(BTN_SET);
+    bool currentRst = digitalRead(BTN_RST);
 
-    else if (newDirection != JOY_NONE) {
-        unsigned long delayTime = firstRepeat ? firstRepeatDelay : repeatDelay;
-        if (now - lastMoveTime >= delayTime) {
-            triggerDirectionEvent(newDirection);
-            lastMoveTime = now;
-            firstRepeat = false;
-        }
-    }
+    if (currentUp == LOW) { upPress_flag = true; }
+    if (currentDown == LOW) { downPress_flag = true; }
+    if (currentLeft == LOW) { leftPress_flag = true; }
+    if (currentRight == LOW) { rightPress_flag = true; }
+    if (currentSel == LOW) { slPress_flag = true; }
+    if (currentSet == LOW) { setPress_flag = true; }
+    if (currentRst == LOW) { rstPress_flag = true; }
 
-    // ==================================================
-    //          Select button with debounce.
-    // ==================================================
-    bool reading = digitalRead(SEL_BTN);
-    if (reading != lastButtonReading) { lastDebounceTime = now; }
-    if ((now - lastDebounceTime) > debounceDelay) {
-        if (reading != stableButtonState) {
-            stableButtonState = reading;
-            if (stableButtonState == LOW) { slPress_flag = true; }
-        }
-    }
-    lastButtonReading = reading;
-
-    // ==================================================
-    //          EVENT SUBMISSION
-    // ==================================================
-    if (upPress_flag || downPress_flag || leftPress_flag || rightPress_flag || slPress_flag) {
-
+    // Envio dos Eventos
+    if (upPress_flag || downPress_flag || leftPress_flag || rightPress_flag || slPress_flag || setPress_flag || rstPress_flag) {
         AnyKeyPress = true;
-
-        // PrevPress = upPress_flag;    // Up default
-        // NextPress = downPress_flag;  // Down default
-        // EscPress = leftPress_flag;   // Left default
-        // DownPress = rightPress_flag; // Right default
-        // SelPress = slPress_flag;     // Select default
 
         joystickMap();
 
-        SelPress = slPress_flag; // Select
+        SelPress = slPress_flag || setPress_flag; // Clique do meio ou botão SET confirma seleção
 
-        // Clear flags
+        // Limpa as flags de evento
         upPress_flag = false;
         downPress_flag = false;
         leftPress_flag = false;
         rightPress_flag = false;
         slPress_flag = false;
+        setPress_flag = false;
+        rstPress_flag = false;
     }
 }
 
 // ======================================================
-// POWER
+// POWER / REBOOT
 // ======================================================
 void powerOff() {}
 void checkReboot() {}
