@@ -37,7 +37,7 @@
 // #define SPI_FREQUENCY 10000000
 // #define SPI_READ_FREQUENCY 16000000
 
-#define ROTATION 1
+#define ROTATION 3
 #define MINBRIGHT 1
 
 #define USB_VID 0x303a
