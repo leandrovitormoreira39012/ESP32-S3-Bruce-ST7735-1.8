@@ -22,12 +22,6 @@
   #include "battery_information.h"
 #endif
 
-#if __has_include("interface.h")
-  #include "interface.h"
-#elif __has_include("../../include/interface.h")
-  #include "../../include/interface.h"
-#endif
-
 // =========================================================================
 // CONFIGURAÇÕES E TEMPOS
 // =========================================================================
@@ -151,7 +145,10 @@ void _setBrightness(uint8_t brightval) {
 void powerOff() {}
 void checkReboot() {}
 
-void inputHandler() {
+// =========================================================================
+// FUNÇÃO DE LEITURA DOS BOTÕES (COM 'I' MAIÚSCULO CONFORME EXIGIDO PELO BRUCE)
+// =========================================================================
+void InputHandler(void) {
     unsigned long now = millis();
     if (now - lastReadTime < readDelay) return;
     lastReadTime = now;
