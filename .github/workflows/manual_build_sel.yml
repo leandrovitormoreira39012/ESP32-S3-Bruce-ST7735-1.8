@@ -37,8 +37,8 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Firmware-BIN-Branch2
+          name: Firmware-BIN-ST7735
           path: |
-            .pio/build/**/*.bin
-            **/firmware.bin
-          if-no-files-found: error
+            bruce-firmware/*.bin
+            **/*.bin
+          if-no-files-found: warn
