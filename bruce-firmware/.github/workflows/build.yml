@@ -45,4 +45,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Firmware-BIN-Branch2
-          path: bruce-firmware/.pio/build/*/*.bin
+          path: "**/*.bin"
