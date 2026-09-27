@@ -1,0 +1,50 @@
+name: Build Bruce Firmware
+
+on:
+  push:
+    branches: [ main, master, dola ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bruce-firmware
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar compilador GCC
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+
+      - name: Cache do PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            ~/.cache/pip
+          key: ${{ runner.os }}-pio-${{ hashFiles('bruce-firmware/platformio.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-
+
+      - name: Instalar PlatformIO
+        run: pip install platformio
+
+      - name: Compilar firmware
+        run: pio run -e esp32-s3-st7735
+
+      - name: Gerar arquivo .bin
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bruce-esp32-s3-st7735
+          path: bruce-firmware/Bruce-esp32-s3-st7735.bin
+          if-no-files-found: error
