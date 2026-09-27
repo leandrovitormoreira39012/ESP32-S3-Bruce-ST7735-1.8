@@ -77,7 +77,7 @@ bool stableButtonState = HIGH;
 unsigned long lastDebounceTime = 0;
 
 // =========================================================================
-// LEITURA E MAPEAMENTO INTERNO (C++)
+// LEITURA E MAPEAMENTO INTERNO
 // =========================================================================
 JoyDirection readJoystickDirection() {
     // Invertidos para alinhar com a tela de ponta-cabeça (180°):
@@ -114,9 +114,9 @@ void joystickMap() {
 }
 
 // =========================================================================
-// API DE INTERFACE EXTERNA (EXPORTADA EM C)
+// FUNÇÕES DE INTERFACE DO BRUCE (C++ PADRÃO)
 // =========================================================================
-extern "C" void _setup_gpio() {
+void _setup_gpio() {
     pinMode(UP_BTN, INPUT_PULLUP);
     pinMode(DOWN_BTN, INPUT_PULLUP);
     pinMode(LEFT_BTN, INPUT_PULLUP);
@@ -131,17 +131,23 @@ extern "C" void _setup_gpio() {
     bruceConfigPins.rotation = 3; // Rotação 180°
 }
 
-extern "C" void _post_setup_gpio() {}
+void _post_setup_gpio() {}
 
-extern "C" int getBattery() {
+int getBattery() {
     return 100;
 }
 
-extern "C" void _setBrightness(uint8_t brightval) {
+void _setBrightness(uint8_t brightval) {
     pinMode(TFT_BL, OUTPUT);
     digitalWrite(TFT_BL, HIGH);
 }
 
+void powerOff() {}
+void checkReboot() {}
+
+// =========================================================================
+// APENAS O INPUT_HANDLER EXPORTADO EM C
+// =========================================================================
 extern "C" void inputHandler(void) {
     unsigned long now = millis();
     if (now - lastReadTime < readDelay) return;
@@ -190,6 +196,3 @@ extern "C" void inputHandler(void) {
         slPress_flag = false;
     }
 }
-
-extern "C" void powerOff() {}
-extern "C" void checkReboot() {}
