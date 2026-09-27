@@ -45,4 +45,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Firmware-BIN-Branch2
-          path: "**/*.bin"
+          path: bruce-firmware/Bruce-esp32-s3-st7735.bin
+          if-no-files-found: error
