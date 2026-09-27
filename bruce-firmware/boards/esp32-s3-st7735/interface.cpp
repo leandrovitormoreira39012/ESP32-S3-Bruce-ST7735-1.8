@@ -1,3 +1,4 @@
+cat << 'EOF' > bruce-firmware/boards/esp32-s3-st7735/interface.cpp
 #include <Arduino.h>
 
 // Inclusões dos cabeçalhos do núcleo
@@ -77,8 +78,10 @@ bool stableButtonState = HIGH;
 unsigned long lastDebounceTime = 0;
 
 // =========================================================================
-// INICIALIZAÇÃO DE GPIOS, ROTAÇÃO 180° E BRILHO MÁXIMO
+// FUNÇÕES DE INTERFACE C/C++ (EXTERN "C" PARA RESOLVER O LINKER)
 // =========================================================================
+extern "C" {
+
 void _setup_gpio() {
     pinMode(UP_BTN, INPUT_PULLUP);
     pinMode(DOWN_BTN, INPUT_PULLUP);
@@ -86,7 +89,7 @@ void _setup_gpio() {
     pinMode(RIGHT_BTN, INPUT_PULLUP);
     pinMode(SEL_BTN, INPUT_PULLUP);
 
-    // Força o pino de luz de fundo no máximo absoluto
+    // Força o pino de luz de fundo no máximo
     pinMode(TFT_BL, OUTPUT);
     digitalWrite(TFT_BL, HIGH);
 
@@ -96,13 +99,8 @@ void _setup_gpio() {
 
 void _post_setup_gpio() {}
 
-// Leitura segura da bateria para não quebrar a compilação no GitHub
 int getBattery() {
-    #if defined(HAS_BATTERY) || defined(BATTERY_PIN)
-        return 100;
-    #else
-        return 100;
-    #endif
+    return 100;
 }
 
 void _setBrightness(uint8_t brightval) {
@@ -110,9 +108,6 @@ void _setBrightness(uint8_t brightval) {
     digitalWrite(TFT_BL, HIGH);
 }
 
-// =========================================================================
-// LEITURA DO JOYSTICK COM EIXOS INVERTIDOS (TELA VIRADA 180°)
-// =========================================================================
 JoyDirection readJoystickDirection() {
     // Invertidos para alinhar com a tela de ponta-cabeça:
     if (digitalRead(UP_BTN) == LOW)    return JOY_DOWN;  // Cima vira Baixo
@@ -198,3 +193,6 @@ void inputHandler(void) {
 
 void powerOff() {}
 void checkReboot() {}
+
+} // extern "C"
+EOF
