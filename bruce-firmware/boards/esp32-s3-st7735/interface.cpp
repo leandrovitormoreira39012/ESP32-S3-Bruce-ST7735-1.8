@@ -1,4 +1,3 @@
-cat << 'EOF' > bruce-firmware/boards/esp32-s3-st7735/interface.cpp
 #include <Arduino.h>
 
 // Inclusões dos cabeçalhos do núcleo
@@ -78,10 +77,8 @@ bool stableButtonState = HIGH;
 unsigned long lastDebounceTime = 0;
 
 // =========================================================================
-// FUNÇÕES DE INTERFACE C/C++ (EXTERN "C" PARA RESOLVER O LINKER)
+// FUNÇÕES DE INTERFACE
 // =========================================================================
-extern "C" {
-
 void _setup_gpio() {
     pinMode(UP_BTN, INPUT_PULLUP);
     pinMode(DOWN_BTN, INPUT_PULLUP);
@@ -193,6 +190,3 @@ void inputHandler(void) {
 
 void powerOff() {}
 void checkReboot() {}
-
-} // extern "C"
-EOF
