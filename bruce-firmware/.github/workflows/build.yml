@@ -45,4 +45,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Firmware-BIN-Branch2
-          path: "**/*.bin"
+          path: |
+            *.bin
+            **/*.bin
