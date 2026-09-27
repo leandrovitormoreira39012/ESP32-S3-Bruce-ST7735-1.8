@@ -22,6 +22,12 @@
   #include "battery_information.h"
 #endif
 
+#if __has_include("interface.h")
+  #include "interface.h"
+#elif __has_include("../../include/interface.h")
+  #include "../../include/interface.h"
+#endif
+
 // =========================================================================
 // CONFIGURAÇÕES E TEMPOS
 // =========================================================================
@@ -114,7 +120,7 @@ void joystickMap() {
 }
 
 // =========================================================================
-// FUNÇÕES DE INTERFACE DO BRUCE (100% C++ PADRÃO)
+// FUNÇÕES DE INTERFACE DO BRUCE
 // =========================================================================
 void _setup_gpio() {
     pinMode(UP_BTN, INPUT_PULLUP);
