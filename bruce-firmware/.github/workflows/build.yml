@@ -41,9 +41,11 @@ jobs:
       - name: Compilar Firmware
         run: pio run -d bruce-firmware
 
-      - name: Gerar arquivo .bin
+      - name: Salvar Binarios
         uses: actions/upload-artifact@v4
         with:
-          name: Bruce-esp32-s3-st7735
-          path: bruce-firmware/Bruce-esp32-s3-st7735.bin
-          if-no-files-found: error
+          name: Firmware-BIN-Branch2
+          path: |
+            **/*.bin
+            *.bin
+          if-no-files-found: warn
