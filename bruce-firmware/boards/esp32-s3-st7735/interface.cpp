@@ -114,7 +114,7 @@ void joystickMap() {
 }
 
 // =========================================================================
-// FUNÇÕES DE INTERFACE DO BRUCE (C++ PADRÃO)
+// FUNÇÕES DE INTERFACE DO BRUCE (100% C++ PADRÃO)
 // =========================================================================
 void _setup_gpio() {
     pinMode(UP_BTN, INPUT_PULLUP);
@@ -145,10 +145,7 @@ void _setBrightness(uint8_t brightval) {
 void powerOff() {}
 void checkReboot() {}
 
-// =========================================================================
-// APENAS O INPUT_HANDLER EXPORTADO EM C
-// =========================================================================
-extern "C" void inputHandler(void) {
+void inputHandler() {
     unsigned long now = millis();
     if (now - lastReadTime < readDelay) return;
     lastReadTime = now;
